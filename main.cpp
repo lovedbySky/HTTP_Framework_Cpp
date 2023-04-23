@@ -5,7 +5,7 @@ int main()
 {
     HttpServer WebApp;
     WebApp.using_paths = false;
-    WebApp.debug = false;
+    WebApp.debug = true;
     WebApp.run(8080);
     return 0;
 }

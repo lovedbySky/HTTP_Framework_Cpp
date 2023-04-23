@@ -2,6 +2,7 @@
 #include <fstream>
 // #include <cstring>
 #include <regex>
+#include <thread>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,11 +11,13 @@
 
 class HttpServer{
     public:
-        
+
+        std::string templates_path = "templates/";
         bool using_paths = true;
         bool debug = false;
 
-        static void run(int port)
+
+        void run(int port)
         {
             int server_socket, client_socket;
             char buffer[1024];
@@ -33,19 +36,28 @@ class HttpServer{
 
                 // чтение данных от клиента
                 read(client_socket, buffer, 1024);
-                std::cout << "Received message: " << buffer << std::endl;
+                // std::cout << "Received message: " << buffer << std::endl;
+
+                std::string filename = this -> parsePath(buffer);
+                if (debug) { std::cout << "GET /" << filename; }
 
                 // чтение файла
-                const char* filename = "templates/index.html";
-                std::ifstream file(filename);
-                if (!file.is_open()) {
-                    std::cerr << "Error opening file " << filename << std::endl;
-                    // return 1;
+                
+                filename = (!filename.empty()) ? filename : "index.html";
+                std::ifstream file(templates_path + filename);
+                std::string response;
+                if (file.is_open())
+                {
+                    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                    response = "HTTP/1.1 200 OK\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n" + content;
+                    if (debug) { std::cout << " 200 OK" << std::endl; }
                 }
-                std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-                // отправка данных клиенту
-                std::string response = "HTTP/1.1 200 OK\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n" + content;
+                else
+                {
+                    response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>Page not found</h1>";
+                    if (debug) { std::cout << " 404 Error" << std::endl; }
+                }
+                
                 write(client_socket, response.c_str(), response.length());
 
                 // закрытие соединения с клиентом
@@ -56,6 +68,16 @@ class HttpServer{
             close(server_socket);
         }
     private:
-        
-};
 
+        std::string parseMethod(char* buff);
+        std::string parseUserAgent(char* buff);
+        std::string parsePath(char* buff)
+        {
+            std::string str(buff);
+            std::regex rgx("GET\\s+/(\\S+)\\s+HTTP");
+            std::smatch match;
+            std::regex_search(str, match, rgx);
+            return match[1].str();
+        }
+
+};
