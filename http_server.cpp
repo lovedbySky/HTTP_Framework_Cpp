@@ -12,7 +12,7 @@
 class HttpServer{
     public:
 
-        std::string templates_path = "templates/";
+        std::string project_path = "";
         bool using_paths = true;
         bool debug = false;
 
@@ -28,7 +28,7 @@ class HttpServer{
             server_address.sin_port = htons(port);
             bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address));
             listen(server_socket, 1);
-            std::cout << "Server running on port 8080" << std::endl;
+            std::cout << "Server running on port " << port << std::endl;
             while (true) {
                 // принятие запроса на соединение
                 socklen_t client_address_len = sizeof(client_address);
@@ -38,13 +38,14 @@ class HttpServer{
                 read(client_socket, buffer, 1024);
                 // std::cout << "Received message: " << buffer << std::endl;
 
-                std::string filename = this -> parsePath(buffer);
-                if (debug) { std::cout << "GET /" << filename; }
+                std::string method = this -> parseMethod(buffer);
+                std::string route = this -> parseRoute(buffer);
+                if (debug) { std::cout << method << " /" << route; }
 
                 // чтение файла
                 
-                filename = (!filename.empty()) ? filename : "index.html";
-                std::ifstream file(templates_path + filename);
+                route = (!route.empty()) ? route : "index.html";
+                std::ifstream file(project_path + "/" + route);
                 std::string response;
                 if (file.is_open())
                 {
@@ -69,9 +70,25 @@ class HttpServer{
         }
     private:
 
-        std::string parseMethod(char* buff);
-        std::string parseUserAgent(char* buff);
-        std::string parsePath(char* buff)
+        std::string parseMethod(char* buff)
+        {
+            std::string str(buff);
+            std::regex rgx("([\\w\\d]+)\\s+/(.*)");
+            std::smatch match;
+            std::regex_search(str, match, rgx);
+            return match[1].str();
+        }
+
+        std::string parseUserAgent(char* buff)
+        {
+            std::string str(buff);
+            std::regex rgx("User-agent:\\s+/(\\S+)\\s");
+            std::smatch match;
+            std::regex_search(str, match, rgx);
+            return match[1].str();
+        }
+        
+        std::string parseRoute(char* buff)
         {
             std::string str(buff);
             std::regex rgx("GET\\s+/(\\S+)\\s+HTTP");
