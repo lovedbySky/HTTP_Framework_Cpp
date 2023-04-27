@@ -4,10 +4,10 @@ Simple HTTP lib for C++ web projects
 
 
 # Импорт библиотеки
-<div class="cpp"><code>#include "http_framework.cpp"</code></div>
+<code>#include "http_framework.cpp"</code>
 
 # Создание экземпляра класса
-<div class="cpp"><code>HttpServer WebApp;</code></div>
+<code>HttpServer WebApp;</code>
 
 # Настройка приложения
 
@@ -20,9 +20,9 @@ Simple HTTP lib for C++ web projects
 # Запуск приложения
 
    <code>
-      <p>WebApp.run("127.0.0.1", 8080, true);</p>
-      <p class="comment">// Первый аргумент функции принимает IP адресс</p>
-      <p class="comment">// Второй аргумент функции принимает порт</p>
-      <p class="comment">// Третий аргумент функции включает/выключает debug mode</p>
+      WebApp.run("127.0.0.1", 8080, true);
+      // Первый аргумент функции принимает IP адресс
+      // Второй аргумент функции принимает порт
+      // Третий аргумент функции включает/выключает debug mode
    </code>
 
