@@ -12,8 +12,8 @@ Simple HTTP lib for C++ web projects
 # Настройка приложения
 <div class="cpp">
    <code>
-      <p>WebApp.Config.secret_key = "12345";</p>
-      <p>WebApp.Config.project_path = "project/";</p>
+      WebApp.Config.secret_key = "12345";
+      WebApp.Config.project_path = "project/";
    </code>
 </div>
 
