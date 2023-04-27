@@ -2,7 +2,7 @@
 
 Simple HTTP lib for C++ web projects
 
-        <div>
+   <div>
             <h2>Импорт библиотеки</h2>
             <div class="cpp"><code>#include "http_framework.cpp"</code></div>
 
