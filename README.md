@@ -10,19 +10,19 @@ Simple HTTP lib for C++ web projects
 <div class="cpp"><code>HttpServer WebApp;</code></div>
 
 # Настройка приложения
-<div class="cpp">
+
    <code>
       WebApp.Config.secret_key = "12345";
       WebApp.Config.project_path = "project/";
    </code>
-</div>
+
 
 # Запуск приложения
-<div class="cpp">
+
    <code>
       <p>WebApp.run("127.0.0.1", 8080, true);</p>
       <p class="comment">// Первый аргумент функции принимает IP адресс</p>
       <p class="comment">// Второй аргумент функции принимает порт</p>
       <p class="comment">// Третий аргумент функции включает/выключает debug mode</p>
    </code>
-</div>
+
