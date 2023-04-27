@@ -1,12 +1,13 @@
-#include "http_server.cpp"
+#include "http_framework.cpp"
 
 
 int main()
 {
-    HttpServer WebApp;
-    WebApp.project_path = "templates/";
-    WebApp.using_paths = false;
-    WebApp.debug = true;
-    WebApp.run(8080);
+    HttpApplication WebApp;
+
+    WebApp.Config.secret_key = "12345";
+    // WebApp.Config.project_path = "project/";
+
+    WebApp.run("127.0.0.1", 9090, true);
     return 0;
 }

@@ -1,5 +1,5 @@
 .vscode
 webapp
-/templates
+/project
 Makefile
 pytest.py

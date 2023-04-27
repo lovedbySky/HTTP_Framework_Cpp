@@ -9,16 +9,26 @@
 #include <unistd.h>
 
 
-class HttpServer{
+class HttpApplication{
     public:
-
-        std::string project_path = "";
-        bool using_paths = true;
-        bool debug = false;
-
-
-        void run(int port)
+        HttpApplication()
         {
+            Config = ConfigApp();
+        }
+
+        struct ConfigApp
+        {
+            std::string secret_key;
+            std::string project_path;
+            bool debug;
+        };
+
+        ConfigApp Config;
+
+        void run(std::string host, int port, bool debug)
+        {
+            Config.debug = debug;
+
             int server_socket, client_socket;
             char buffer[1024];
             struct sockaddr_in server_address, client_address;
@@ -28,7 +38,7 @@ class HttpServer{
             server_address.sin_port = htons(port);
             bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address));
             listen(server_socket, 1);
-            std::cout << "Server running on port " << port << std::endl;
+            std::cout << "Server running on " << host << ':' << port << std::endl;
             while (true) {
                 // принятие запроса на соединение
                 socklen_t client_address_len = sizeof(client_address);
@@ -42,33 +52,43 @@ class HttpServer{
                 std::string route = this -> parseRoute(buffer);
                 if (debug) { std::cout << method << " /" << route; }
 
-                // чтение файла
-                
-                route = (!route.empty()) ? route : "index.html";
-                std::ifstream file(project_path + "/" + route);
-                std::string response;
-                if (file.is_open())
+                if (method == "GET")
                 {
-                    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                    response = "HTTP/1.1 200 OK\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n" + content;
-                    if (debug) { std::cout << " 200 OK" << std::endl; }
+                    route = (!route.empty()) ? route : "index.html";
+                    if (!Config.project_path.empty()) { Config.project_path += "/"; }
+                    std::string response = render_template(Config.project_path + route);
+                    write(client_socket, response.c_str(), response.length());
                 }
                 else
                 {
-                    response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>Page not found</h1>";
-                    if (debug) { std::cout << " 404 Error" << std::endl; }
+                    std::string response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>405 Method Not Allowed</h1>";
+                    if (Config.debug) { std::cout << " 405 Method Not Alowed" << std::endl; }
+                    write(client_socket, response.c_str(), response.length());
                 }
-                
-                write(client_socket, response.c_str(), response.length());
-
-                // закрытие соединения с клиентом
                 close(client_socket);
             }
-
-            // закрытие серверного сокета
             close(server_socket);
         }
     private:
+
+        std::string render_template(std::string path)
+        {
+            std::ifstream file(path);
+            std::string response;
+            if (file.is_open())
+            {
+                std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                response = "HTTP/1.1 200 OK\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n" + content;
+                if (Config.debug) { std::cout << " 200 OK" << std::endl; }
+            }
+            else
+            {
+                response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>404 Page Not Found</h1>";
+                if (Config.debug) { std::cout << " 404 Page Not Found" << std::endl; }
+            }
+            return response;
+        }
+
 
         std::string parseMethod(char* buff)
         {
@@ -79,6 +99,7 @@ class HttpServer{
             return match[1].str();
         }
 
+
         std::string parseUserAgent(char* buff)
         {
             std::string str(buff);
@@ -88,10 +109,11 @@ class HttpServer{
             return match[1].str();
         }
         
+
         std::string parseRoute(char* buff)
         {
             std::string str(buff);
-            std::regex rgx("GET\\s+/(\\S+)\\s+HTTP");
+            std::regex rgx("\\w+\\s+/(\\S+)\\s+HTTP");
             std::smatch match;
             std::regex_search(str, match, rgx);
             return match[1].str();
