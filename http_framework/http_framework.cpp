@@ -8,40 +8,19 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "http_parser.cpp"
+#include "debugger.cpp"
+#include "config.cpp"
+#include "request.cpp"
 
 
-class HttpApplication;
-
-
-struct Config
-{
-    std::string secret_key;
-    std::string templates_path;
-    bool debug;
-};
-
-struct Request
-{
-    std::string method;
-    std::string route;
-};
+Debugger debug;
+Config config;
+Request request;
 
 
 class HttpApplication
 {
     public:
-        HttpApplication()
-        {
-            config = Config();
-            request = Request();
-        }
-
-        Config config;
-        Request request;
-        HttpParser parser;
-        int server_socket, client_socket;
-
         void route(std::string route, void (&func)())
         {
             route.erase(route.find("/"), 1);
@@ -56,17 +35,13 @@ class HttpApplication
             {
                 std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
                 response = "HTTP/1.1 200 OK\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n" + content;
-                // if (config.debug) { std::cout << " 200 OK" << std::endl; }
             }
             else
             {
                 response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>404 Page Not Found</h1>";
-                // if (config.debug) { std::cout << " 404 Page Not Found" << std::endl; }
             }
-            // return response;
             write(client_socket, response.c_str(), response.length());
         }
-
 
         void run(std::string host, int port)
         {
@@ -79,8 +54,8 @@ class HttpApplication
             bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address));
             listen(server_socket, 1);
             std::cout << "Server running on " << host << ':' << port << std::endl;
-            if (config.debug) { std::cout << "Debug mode is on" << std::endl; }
-            else { std::cout << "Debug mode is off" << std::endl; }
+            if (config.debug) { debug.console_log("Debug mode is on"); }
+            else { debug.console_log("Debug mode is off"); }
             while (true) {
                 // принятие запроса на соединение
                 socklen_t client_address_len = sizeof(client_address);
@@ -88,22 +63,19 @@ class HttpApplication
 
                 // чтение данных от клиента
                 read(client_socket, buffer, 1024);
-                // std::cout << "Received message: " << buffer << std::endl;
 
-                request.method = parser.parseMethod(buffer);
-                request.route = parser.parseRoute(buffer);
-                // if (config.debug) { std::cout << request.method << " /" << route; }
+                request.to_request(buffer);
 
                 if (routes.count(request.route) != 0)
                 {
                     routes[request.route]();
-                    if (config.debug) { std::cout << "/" << request.route << " 200 OK" << std::endl; }
+                    debug.console_log("/" + request.route + " 200 OK");
                 }
                 else
                 {
                     std::string response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>404 Page Not Found</h1>";
-                    if (config.debug) { std::cout << "/" << request.route << " 404 Page Not Found" << std::endl; }
                     write(client_socket, response.c_str(), response.length());
+                    debug.console_log("/" + request.route + " 404 Page Not Found");
                 }
                 
                 close(client_socket);
@@ -112,5 +84,6 @@ class HttpApplication
         }
 
     private:
+        int server_socket, client_socket;
         std::map <std::string, void(*)()> routes;
 };

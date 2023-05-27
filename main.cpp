@@ -1,37 +1,43 @@
 #include "http_framework/http_framework.cpp"
 
 
-HttpApplication WebApp;
+HttpApplication webApp;
 
 
 void index()
 {
-    if (WebApp.request.method == "GET")
+    if (request.method == "GET")
     {
-        WebApp.render_template("index.html"); 
+        webApp.render_template("index.html"); 
+    }
+    else if (request.method == "POST")
+    {
+        debug.console_log(request.data);
+        webApp.render_template("index.html"); 
     }
 }
 
 
 void readme()
 {
-    if (WebApp.request.method == "GET")
+    if (request.method == "GET")
     {
-        WebApp.render_template("readme.html"); 
+        webApp.render_template("readme.html"); 
     }
 }
 
 
 int main()
 {
-    WebApp.config.debug = true;
-    WebApp.config.secret_key = "12345";
-    WebApp.config.templates_path = "project/";
+    config.debug = false;
+    config.log = true;
+    config.secret_key = "12345";
+    config.templates_path = "project/";
 
-    WebApp.route("/index", index);
-    WebApp.route("/", index);
-    WebApp.route("/readme", readme);
+    webApp.route("/index", index);
+    webApp.route("/", index);
+    webApp.route("/readme", readme);
 
-    WebApp.run("127.0.0.1", 8080);
+    webApp.run("127.0.0.1", 9090);
     return 0;
 }
