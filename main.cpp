@@ -12,7 +12,7 @@ void index()
     }
     else if (request.method == "POST")
     {
-        debug.console_log(request.data);
+        logger.console_log(request.data);
         webApp.render_template("index.html"); 
     }
 }
@@ -31,13 +31,12 @@ int main()
 {
     config.debug = false;
     config.log = true;
-    config.secret_key = "12345";
     config.templates_path = "project/";
 
     webApp.route("/index", index);
     webApp.route("/", index);
     webApp.route("/readme", readme);
 
-    webApp.run("127.0.0.1", 9090);
+    webApp.run("127.0.0.1", 8080);
     return 0;
 }

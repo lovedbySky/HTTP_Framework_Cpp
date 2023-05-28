@@ -8,14 +8,14 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "debugger.cpp"
 #include "config.cpp"
 #include "request.cpp"
+#include "logger.cpp"
 
 
-Debugger debug;
 Config config;
 Request request;
+Logger logger;
 
 
 class HttpApplication
@@ -54,8 +54,8 @@ class HttpApplication
             bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address));
             listen(server_socket, 1);
             std::cout << "Server running on " << host << ':' << port << std::endl;
-            if (config.debug) { debug.console_log("Debug mode is on"); }
-            else { debug.console_log("Debug mode is off"); }
+            if (config.debug) { logger.console_log("Debug mode is on"); }
+            else { logger.console_log("Debug mode is off"); }
             while (true) {
                 // принятие запроса на соединение
                 socklen_t client_address_len = sizeof(client_address);
@@ -65,17 +65,18 @@ class HttpApplication
                 read(client_socket, buffer, 1024);
 
                 request.to_request(buffer);
+                logger.access_log(request.user_agent + "\t/" + request.route);
 
                 if (routes.count(request.route) != 0)
                 {
                     routes[request.route]();
-                    debug.console_log("/" + request.route + " 200 OK");
+                    logger.console_log("/" + request.route + " 200 OK");
                 }
                 else
                 {
                     std::string response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>404 Page Not Found</h1>";
                     write(client_socket, response.c_str(), response.length());
-                    debug.console_log("/" + request.route + " 404 Page Not Found");
+                    logger.console_log("/" + request.route + " 404 Page Not Found");
                 }
                 
                 close(client_socket);
