@@ -1,17 +1,13 @@
 import requests
+import json, base64
 
-for i in range(3):
-    requests.get("http://localhost:8080/index.html")
 
-for i in range(3):
-    requests.post("http://localhost:8080/index.html")
+# for i in range(3):
+#     requests.get("http://localhost:9090/index")
 
-for i in range(3):
-    requests.put("http://localhost:8080/index.html")
 
-for i in range(3):
-    requests.put("http://localhost:8080/index")
+requests.post("http://localhost:9090/login", base64.encodebytes(b"username=admin&password=1234567"))
 
-for i in range(3):
-    requests.put("http://localhost:8080/readme")
+# for i in range(3):
+#     requests.put("http://localhost:8080/index")
     

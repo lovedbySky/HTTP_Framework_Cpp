@@ -53,9 +53,11 @@ class HttpApplication
             server_address.sin_port = htons(port);
             bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address));
             listen(server_socket, 1);
-            std::cout << "Server running on " << host << ':' << port << std::endl;
+
+            logger.console_log("Server running on " + host + ":" + std::to_string(port));
             if (config.debug) { logger.console_log("Debug mode is on"); }
             else { logger.console_log("Debug mode is off"); }
+
             while (true) {
                 // принятие запроса на соединение
                 socklen_t client_address_len = sizeof(client_address);
@@ -65,18 +67,21 @@ class HttpApplication
                 read(client_socket, buffer, 1024);
 
                 request.to_request(buffer);
-                logger.access_log(request.user_agent + "\t/" + request.route);
+                if (config.log)
+                    logger.access_log(request.user_agent + "\t/" + request.route);
 
                 if (routes.count(request.route) != 0)
                 {
                     routes[request.route]();
-                    logger.console_log("/" + request.route + " 200 OK");
+                    if (config.debug)
+                        logger.console_log(request.method + " /" + request.route + " 200 OK");
                 }
                 else
                 {
                     std::string response = "HTTP/1.1 404 Error\r\nServer: Ivan\r\nContent-Type: text/html\r\n\r\n<h1>404 Page Not Found</h1>";
                     write(client_socket, response.c_str(), response.length());
-                    logger.console_log("/" + request.route + " 404 Page Not Found");
+                    if (config.debug)
+                        logger.console_log(request.method + " /" + request.route + " 404 Page Not Found");
                 }
                 
                 close(client_socket);

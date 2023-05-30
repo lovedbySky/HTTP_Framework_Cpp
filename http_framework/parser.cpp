@@ -34,9 +34,17 @@ class Parser
 
         std::string parse_response_body(char* buff)
         {
-            std::string reg = "";
-            std::string route = parse(buff, reg);
-            return route;
+            std::string temp = buff;
+            std::string data;
+            for (int i = temp.size(); i > 0; i--)
+            {
+                if (temp[i] == '\n')
+                    break;
+                data += temp[i];
+            }
+            std::reverse(data.begin(), data.end());
+            // std::cout << data << std::endl;
+            return data;
         }
 
     private:
